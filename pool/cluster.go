@@ -1,6 +1,6 @@
 package pool
 
-import "github.com/bird-coder/common/hash"
+import "github.com/bird-coder/manyo/hash"
 
 type PeerPicker interface {
 	AddNode(node *hash.Node)

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bird-coder/common/pool"
+	"github.com/bird-coder/manyo/pool"
 )
 
 // Error represents an error returned in a command reply.
