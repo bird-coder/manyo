@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-02-17 14:33:03
- * @LastEditTime: 2023-02-22 13:36:38
+ * @LastEditTime: 2023-02-23 14:49:01
  * @LastEditors: yuanshisan
  */
 package util
@@ -42,9 +42,9 @@ func PackHeader(buf []byte, header MsgHeader) []byte {
 	return headerBuf
 }
 
-func UnPackHeader(buf []byte) (*MsgHeader, error) {
+func UnPackHeader(buf []byte) (MsgHeader, error) {
 	length := len(buf)
-	header := new(MsgHeader)
+	var header MsgHeader
 	if length < HeaderLen {
 		err := errors.New("Read msg size failed")
 		return header, err
