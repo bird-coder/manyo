@@ -8,12 +8,12 @@ import (
 )
 
 type MyCustomClaims struct {
-	Data struct{}
+	Data any
 	jwt.RegisteredClaims
 }
 
 // /////////////////对称加密//////////////////////
-func Issue(data struct{}, secretKey []byte) (string, error) {
+func Issue(data any, secretKey []byte) (string, error) {
 	claims := MyCustomClaims{
 		data,
 		jwt.RegisteredClaims{
@@ -31,18 +31,18 @@ func Issue(data struct{}, secretKey []byte) (string, error) {
 	return signedToken, nil
 }
 
-func Auth(signedToken string, secretKey []byte) (struct{}, error) {
+func Auth(signedToken string, secretKey []byte) (any, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &MyCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	}, jwt.WithLeeway(5*time.Second))
 	if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
 		return claims.Data, nil
 	}
-	return struct{}{}, err
+	return nil, err
 }
 
 // /////////////////非对称加密//////////////////////
-func IssueRSA(data struct{}, privateKeyPem string) (string, error) {
+func IssueRSA(data any, privateKeyPem string) (string, error) {
 	claims := MyCustomClaims{
 		data,
 		jwt.RegisteredClaims{
@@ -68,7 +68,7 @@ func IssueRSA(data struct{}, privateKeyPem string) (string, error) {
 	return signedToken, nil
 }
 
-func AuthRSA(signedToken string, publicKeyPem string) (struct{}, error) {
+func AuthRSA(signedToken string, publicKeyPem string) (any, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &MyCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
 		publicKeyData, err := ioutil.ReadFile(publicKeyPem)
 		if err != nil {
@@ -79,5 +79,5 @@ func AuthRSA(signedToken string, publicKeyPem string) (struct{}, error) {
 	if claims, ok := token.Claims.(*MyCustomClaims); ok && token.Valid {
 		return claims.Data, nil
 	}
-	return struct{}{}, err
+	return nil, err
 }
