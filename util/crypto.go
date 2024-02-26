@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-03-13 17:31:09
- * @LastEditTime: 2023-03-13 18:01:41
+ * @LastEditTime: 2023-09-27 22:06:10
  * @LastEditors: yuanshisan
  */
 package util
@@ -11,7 +11,9 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 )
 
@@ -31,7 +33,7 @@ func DecryptByAes(data string, key []byte) ([]byte, error) {
 	return aesDecrypt(dataBytes, key)
 }
 
-//aes 加密
+// aes 加密
 func aesEncrypt(data []byte, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -45,7 +47,7 @@ func aesEncrypt(data []byte, key []byte) ([]byte, error) {
 	return crypted, nil
 }
 
-//aes 解密
+// aes 解密
 func aesDecrypt(data []byte, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -62,14 +64,14 @@ func aesDecrypt(data []byte, key []byte) ([]byte, error) {
 	return crypted, nil
 }
 
-//pkcs7 填充
+// pkcs7 填充
 func pkcs7Padding(data []byte, blockSize int) []byte {
 	padding := blockSize - len(data)%blockSize
 	paddingText := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(data, paddingText...)
 }
 
-//pkcs7 填充的反向操作
+// pkcs7 填充的反向操作
 func pkcs7UnPadding(data []byte) ([]byte, error) {
 	length := len(data)
 	if length == 0 {
@@ -77,4 +79,10 @@ func pkcs7UnPadding(data []byte) ([]byte, error) {
 	}
 	padding := int(data[length-1])
 	return data[:(length - padding)], nil
+}
+
+func Md5Encode(data []byte) string {
+	h := md5.New()
+	h.Write(data)
+	return hex.EncodeToString(h.Sum(nil))
 }
