@@ -2,21 +2,21 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-30 21:34:50
- * @LastEditTime: 2023-09-30 21:46:31
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-03-05 23:32:09
+ * @LastEditors: yujiajie
  */
 package logger
 
-type Level int8
+type Level string
 
 const (
-	InfoLevel Level = iota
-	DebugLevel
-	WarnLevel
-	ErrorLevel
-	PanicLevel
-	DPanicLevel
-	FatalLevel
+	InfoLevel   Level = "info"
+	DebugLevel  Level = "debug"
+	WarnLevel   Level = "warn"
+	ErrorLevel  Level = "error"
+	PanicLevel  Level = "panic"
+	DPanicLevel Level = "dpanic"
+	FatalLevel  Level = "fatal"
 )
 
 func Info(format string, args ...interface{}) {

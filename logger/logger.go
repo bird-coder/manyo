@@ -3,24 +3,22 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
-	"strings"
 
 	"github.com/bird-coder/manyo/constant"
-	commonUtil "github.com/bird-coder/manyo/util"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
 	logger Logger
 )
 
-type LoggerConfigMap struct {
+type LoggerConfig struct {
 	LogLevel   string                  `json:"level"`
-	Filename   string                  `json:"logpath"`
+	LogPath    string                  `json:"logpath"`
 	MaxSize    int                     `json:"maxsize"`
 	MaxAge     int                     `json:"age"`
 	MaxBackups int                     `json:"backups"`
@@ -44,139 +42,100 @@ type LoggerField struct {
 }
 
 type zaplog struct {
-	cfg *LoggerConfigMap
 	zap *zap.Logger
-	env string
+	al  *zap.AtomicLevel
 }
 
-func NewLogger(filename string, env string) Logger {
-	configMap := commonUtil.LoadXmlConfig(filename)
-	config := formatConfig(configMap)
-	zl := &zaplog{cfg: config, env: env}
-	zl.Init()
+func NewLogger(logpath string, env string) Logger {
+	cfg := &LoggerConfig{
+		LogPath:    "",
+		LogLevel:   "debug",
+		MaxSize:    128,
+		MaxAge:     7,
+		MaxBackups: 30,
+		Compress:   "false",
+	}
+	writer := NewRotateWriter(cfg)
+	level := toZapLevel(Level(cfg.LogLevel))
+
+	var zapOptions []zap.Option
+	if env == constant.Dev.String() {
+		zapOptions = append(zapOptions, zap.Development())
+	}
+	zapOptions = append(zapOptions, zap.AddCaller(),
+		zap.AddCallerSkip(1), zap.AddStacktrace(zap.WarnLevel))
+
+	zl := New(writer, level, zapOptions...)
+	zl.zap.Info("init logger")
+
 	return zl
 }
 
-func (zl *zaplog) Init() {
-	config := zl.cfg
-	hook := lumberjack.Logger{
-		Filename:   config.Filename,
-		MaxSize:    config.MaxSize,
-		MaxAge:     config.MaxAge,
-		MaxBackups: config.MaxBackups,
-		Compress:   strings.ToLower(config.Compress) == "true",
+func New(out io.Writer, level zapcore.Level, opts ...zap.Option) *zaplog {
+	if out == nil {
+		out = os.Stdout
 	}
-	encoderConfig := zapcore.EncoderConfig{
-		MessageKey:     config.ConfigKey.MessageKey,
-		LevelKey:       config.ConfigKey.LevelKey,
-		TimeKey:        config.ConfigKey.TimeKey,
-		NameKey:        config.ConfigKey.NameKey,
-		CallerKey:      config.ConfigKey.CallerKey,
-		StacktraceKey:  config.ConfigKey.StacktraceKey,
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-		EncodeName:     zapcore.FullNameEncoder,
-	}
-	atomicLevel := zl.setLoggerLevel()
-	var writes []zapcore.WriteSyncer
-	var encoder zapcore.Encoder
-	if zl.env == constant.Dev.String() {
-		writes = append(writes, zapcore.AddSync(os.Stdout))
-		encoder = zapcore.NewConsoleEncoder(encoderConfig)
-	} else {
-		writes = append(writes, zapcore.AddSync(&hook))
-		encoder = zapcore.NewJSONEncoder(encoderConfig)
-	}
+	encodeConfig := zap.NewProductionEncoderConfig()
+	encodeConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encodeConfig.EncodeName = zapcore.FullNameEncoder
+
+	al := zap.NewAtomicLevelAt(level)
+
 	core := zapcore.NewCore(
-		encoder,
-		zapcore.NewMultiWriteSyncer(writes...),
-		atomicLevel,
+		zapcore.NewJSONEncoder(encodeConfig),
+		zapcore.AddSync(out),
+		al,
 	)
-	caller := zap.AddCaller()
-	skip := zap.AddCallerSkip(1)
-	stacktrace := zap.AddStacktrace(zap.WarnLevel)
-	field := zl.formatFields()
 
-	var zapOptions []zap.Option
-	if zl.env == constant.Dev.String() {
-		development := zap.Development()
-		zapOptions = append(zapOptions, development)
-	}
-	zapOptions = append(zapOptions, caller, skip, stacktrace, field)
-
-	zl.zap = zap.New(core, zapOptions...)
-	zl.zap.Info("init logger")
+	return &zaplog{zap: zap.New(core, opts...), al: &al}
 }
 
-func (zl *zaplog) setLoggerLevel() zap.AtomicLevel {
+func toZapLevel(level Level) zapcore.Level {
 	var logLevel zapcore.Level
-	switch strings.ToLower(zl.cfg.LogLevel) {
-	case "debug":
+	switch level {
+	case DebugLevel:
 		logLevel = zap.DebugLevel
 		break
-	case "info":
+	case InfoLevel:
 		logLevel = zap.InfoLevel
 		break
-	case "warn":
+	case WarnLevel:
 		logLevel = zap.WarnLevel
 		break
-	case "error":
+	case ErrorLevel:
 		logLevel = zap.ErrorLevel
 		break
-	case "panic":
+	case PanicLevel:
 		logLevel = zap.PanicLevel
 		break
-	case "dpanic":
+	case DPanicLevel:
 		logLevel = zap.DPanicLevel
 		break
-	case "fatal":
+	case FatalLevel:
 		logLevel = zap.FatalLevel
 		break
 	default:
 		logLevel = zap.InfoLevel
 		break
 	}
-	return zap.NewAtomicLevelAt(logLevel)
+	return logLevel
 }
 
-// func (zl *zaplog) formatIntParams() (int, int, int) {
-// 	errStr := "ParamError: wrong param value of logger config file, param: %s, data: %s\n"
-// 	maxSize, err := strconv.Atoi(zl.cfg.MaxSize)
-// 	if err != nil {
-// 		fmt.Printf(errStr, "maxsize", maxSize)
-// 		os.Exit(1)
-// 	}
-// 	age, err := strconv.Atoi(zl.cfg.MaxAge)
-// 	if err != nil {
-// 		fmt.Printf(errStr, "age", age)
-// 		os.Exit(1)
-// 	}
-// 	backups, err := strconv.Atoi(zl.cfg.MaxBackups)
-// 	if err != nil {
-// 		fmt.Printf(errStr, "backups", backups)
-// 		os.Exit(1)
-// 	}
-// 	return maxSize, age, backups
-// }
-
-func (l *zaplog) formatFields() zap.Option {
+func (l *zaplog) formatFields(cfg *LoggerConfig) zap.Option {
 	fields := []zapcore.Field{}
-	for _, configField := range l.cfg.Fields {
+	for _, configField := range cfg.Fields {
 		fields = append(fields, zap.String(configField.Key, configField.Val))
 	}
 	return zap.Fields(fields...)
 }
 
-func formatConfig(configMap map[string]interface{}) *LoggerConfigMap {
+func formatConfig(configMap map[string]interface{}) *LoggerConfig {
 	data, err := json.Marshal(configMap)
 	if err != nil {
 		fmt.Fprint(os.Stderr, "load logger config error, error: json marshal failed\n")
 		os.Exit(1)
 	}
-	config := &LoggerConfigMap{
+	config := &LoggerConfig{
 		LogLevel:   "debug",
 		MaxSize:    128,
 		MaxAge:     7,
@@ -196,52 +155,6 @@ func formatConfig(configMap map[string]interface{}) *LoggerConfigMap {
 		os.Exit(1)
 	}
 	return config
-}
-
-// 该方法已废弃
-func checkLoggerConfig(configMap map[string]interface{}) {
-	isValid := true
-Loop:
-	for key, val := range configMap {
-		if key == "fields" {
-			if _, ok := val.(map[string]interface{}); !ok {
-				isValid = false
-				break Loop
-			}
-			for _, v := range val.(map[string]interface{}) {
-				if _, ok := v.(map[string]interface{}); !ok {
-					isValid = false
-					break Loop
-				}
-				for _, v1 := range v.(map[string]interface{}) {
-					if _, ok := v1.(string); !ok {
-						isValid = false
-						break Loop
-					}
-				}
-			}
-		} else if key == "configKey" {
-			if _, ok := val.(map[string]interface{}); !ok {
-				isValid = false
-				break Loop
-			}
-			for _, v := range val.(map[string]interface{}) {
-				if _, ok := v.(string); !ok {
-					isValid = false
-					break Loop
-				}
-			}
-		} else {
-			if _, ok := val.(string); !ok {
-				isValid = false
-				break Loop
-			}
-		}
-	}
-	if !isValid {
-		fmt.Fprint(os.Stderr, "CheckLoggerConfig: Error: invalid params type of logger config file\n")
-		os.Exit(1)
-	}
 }
 
 func (zl *zaplog) Log(level Level, format string, args ...interface{}) {
