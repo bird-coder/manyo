@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bird-coder/manyo/pool"
+	"github.com/bird-coder/manyo/pkg/pool"
 )
 
 type Pool struct {
