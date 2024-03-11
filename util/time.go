@@ -2,14 +2,12 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-22 23:35:30
- * @LastEditTime: 2023-10-15 19:15:45
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-03-11 21:34:12
+ * @LastEditors: yujiajie
  */
 package util
 
 import "time"
-
-var dateFormat = "2006-01-02 15:04:05"
 
 // 获取某一周的周一时间
 func GetMonday(d time.Time) time.Time {
@@ -37,12 +35,12 @@ func GetZeroTime(d time.Time) time.Time {
 
 // 格式化日期
 func FormatTime(d time.Time) string {
-	return d.Format(dateFormat)
+	return d.Format(time.DateTime)
 }
 
 // 日期转时间戳
 func DateToTime(date string) (int64, error) {
-	d, err := time.Parse(dateFormat, date)
+	d, err := time.Parse(time.DateTime, date)
 	if err != nil {
 		return 0, err
 	}
