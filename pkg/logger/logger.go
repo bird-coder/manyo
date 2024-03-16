@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/bird-coder/manyo/config"
 	"github.com/bird-coder/manyo/constant"
 
 	"go.uber.org/zap"
@@ -46,27 +47,24 @@ type zaplog struct {
 	al  *zap.AtomicLevel
 }
 
-func NewLogger(logpath string, env string) Logger {
-	cfg := &LoggerConfig{
-		LogPath:    "",
-		LogLevel:   "debug",
-		MaxSize:    128,
-		MaxAge:     7,
-		MaxBackups: 30,
-		Compress:   "false",
-	}
-	writer := NewRotateWriter(cfg)
+func NewLogger(cfg *config.LoggerConfig, env string) Logger {
+	var writer io.Writer
+
 	level := toZapLevel(Level(cfg.LogLevel))
 
 	var zapOptions []zap.Option
 	if env == constant.Dev.String() {
+		writer = os.Stdout
 		zapOptions = append(zapOptions, zap.Development())
+	} else {
+		writer = NewRotateWriter(cfg)
 	}
 	zapOptions = append(zapOptions, zap.AddCaller(),
-		zap.AddCallerSkip(1), zap.AddStacktrace(zap.WarnLevel))
+		zap.AddCallerSkip(2), zap.AddStacktrace(zap.WarnLevel))
 
 	zl := New(writer, level, zapOptions...)
 	zl.zap.Info("init logger")
+	logger = zl
 
 	return zl
 }

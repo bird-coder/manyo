@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yujiajie
  * @Date: 2024-03-11 22:50:01
- * @LastEditTime: 2024-03-11 22:54:00
+ * @LastEditTime: 2024-03-16 22:44:45
  * @LastEditors: yujiajie
  */
 package response
@@ -22,7 +22,7 @@ func Error(code int, msg string) Response {
 
 func OK(data interface{}, msg string) Response {
 	res := Default.Clone()
-	if msg != "" {
+	if msg == "" {
 		msg = "success"
 	}
 	res.SetMsg(msg)
