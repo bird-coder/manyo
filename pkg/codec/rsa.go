@@ -44,6 +44,7 @@ type (
 	}
 )
 
+// 创建解密实例
 func NewRsaDecrypter(file string) (RsaDecrypter, error) {
 	content, err := os.ReadFile(file)
 	if err != nil {
@@ -68,12 +69,14 @@ func NewRsaDecrypter(file string) (RsaDecrypter, error) {
 	}, nil
 }
 
+// 解密
 func (r *rsaDecrypter) Decrypt(input []byte) ([]byte, error) {
 	return r.crypt(input, func(b []byte) ([]byte, error) {
 		return rsaDecryptBlock(r.privateKey, b)
 	})
 }
 
+// 对base64格式解密
 func (r *rsaDecrypter) DecryptBase64(input string) ([]byte, error) {
 	if len(input) == 0 {
 		return nil, nil
@@ -86,6 +89,7 @@ func (r *rsaDecrypter) DecryptBase64(input string) ([]byte, error) {
 	return r.Decrypt(base64Decoded)
 }
 
+// 创建加密实例
 func NewRsaEncrypter(key []byte) (RsaEncrypter, error) {
 	block, _ := pem.Decode(key)
 	if block == nil {
@@ -110,6 +114,7 @@ func NewRsaEncrypter(key []byte) (RsaEncrypter, error) {
 	}
 }
 
+// 加密
 func (r *rsaEncrypter) Encrypt(input []byte) ([]byte, error) {
 	return r.crypt(input, func(b []byte) ([]byte, error) {
 		return rsaEncryptBlock(r.publicKey, b)

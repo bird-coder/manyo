@@ -1,7 +1,15 @@
+/*
+ * @Author: yujiajie
+ * @Date: 2024-03-07 09:10:05
+ * @LastEditors: yujiajie
+ * @LastEditTime: 2024-05-23 17:33:37
+ * @FilePath: /manyo/pkg/auth/jwt.go
+ * @Description:
+ */
 package auth
 
 import (
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -50,7 +58,7 @@ func IssueRSA(data any, privateKeyPem string) (string, error) {
 			Issuer:    "aireal",
 		},
 	}
-	privateKeyData, err := ioutil.ReadFile(privateKeyPem)
+	privateKeyData, err := os.ReadFile(privateKeyPem)
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +78,7 @@ func IssueRSA(data any, privateKeyPem string) (string, error) {
 
 func AuthRSA(signedToken string, publicKeyPem string) (any, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &MyCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
-		publicKeyData, err := ioutil.ReadFile(publicKeyPem)
+		publicKeyData, err := os.ReadFile(publicKeyPem)
 		if err != nil {
 			return nil, err
 		}

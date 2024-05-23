@@ -2,8 +2,8 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2022-06-28 16:04:53
- * @LastEditTime: 2022-07-11 15:15:32
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-05-23 17:36:30
+ * @LastEditors: yujiajie
  */
 package hash
 
@@ -39,6 +39,7 @@ type Node struct {
 
 const defaultReplicas = 4
 
+// 新建节点
 func NewNode(id int, addr string, num int) *Node {
 	if num <= 0 {
 		num = defaultReplicas
@@ -58,6 +59,7 @@ type Consistent struct {
 	sync.RWMutex
 }
 
+// 新建一致性hash实例
 func NewConsistent() *Consistent {
 	c := new(Consistent)
 	c.circle = make(map[uint32]string)
@@ -65,6 +67,7 @@ func NewConsistent() *Consistent {
 	return c
 }
 
+// 加入节点
 func (c *Consistent) AddNode(node *Node) {
 	c.Lock()
 	defer c.Unlock()
@@ -85,6 +88,7 @@ func (c *Consistent) add(node *Node) {
 	c.count++
 }
 
+// 移除节点
 func (c *Consistent) Remove(node *Node) {
 	c.Lock()
 	defer c.Unlock()
@@ -126,6 +130,7 @@ func (c *Consistent) remove(node *Node) {
 // 	}
 // }
 
+// 获取所有成员
 func (c *Consistent) Members() []string {
 	c.RLock()
 	defer c.RUnlock()
@@ -137,6 +142,7 @@ func (c *Consistent) Members() []string {
 	return m
 }
 
+// 取节点
 func (c *Consistent) PickNode(key string) (string, error) {
 	c.RLock()
 	defer c.RUnlock()

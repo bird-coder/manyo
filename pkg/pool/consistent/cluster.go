@@ -2,10 +2,10 @@
  * @Description:
  * @Author: yujiajie
  * @Date: 2022-07-11 13:19:09
- * @LastEditTime: 2024-03-06 22:28:47
+ * @LastEditTime: 2024-05-23 17:39:22
  * @LastEditors: yujiajie
  */
-package pool
+package consistent
 
 import "github.com/bird-coder/manyo/pkg/hash"
 

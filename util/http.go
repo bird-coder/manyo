@@ -2,8 +2,8 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-23 19:13:13
- * @LastEditTime: 2023-09-23 22:28:48
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-05-23 17:32:41
+ * @LastEditors: yujiajie
  */
 package util
 
@@ -13,14 +13,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
 
-func HttpGet(url string, params map[string]string) ([]byte, error) {
+func HttpGet(url string, params map[string]interface{}) ([]byte, error) {
 	targetUrl := url
 	if len(params) > 0 {
-		targetUrl = url + "?" + buildParams(params)
+		targetUrl = url + "?" + BuildParams(params)
 	}
 
 	client := &http.Client{}
@@ -55,10 +57,18 @@ func HttpPost(url string, data map[string]interface{}) ([]byte, error) {
 	return res, nil
 }
 
-func buildParams(params map[string]string) string {
+func BuildParams(params map[string]interface{}) string {
 	var res string
+	var val string
 	for k, v := range params {
-		res = res + k + "=" + v + "&"
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.Float32, reflect.Float64: //浮点数需要先转成字符串，防止精度丢失
+			val = fmt.Sprintf("%s=%s", k, strconv.FormatFloat(rv.Float(), 'f', -1, 64))
+		default:
+			val = fmt.Sprintf("%s=%v", k, v)
+		}
+		res = res + val + "&"
 	}
 	return strings.Trim(res, "&")
 }

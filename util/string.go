@@ -2,8 +2,8 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-22 23:16:06
- * @LastEditTime: 2023-09-28 00:03:21
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-05-23 17:11:12
+ * @LastEditors: yujiajie
  */
 package util
 
@@ -32,8 +32,8 @@ func MultiContains(s string, words []string) bool {
 	return reg.Match([]byte(s))
 }
 
-func GenerateRandomKey6() string {
-	return generateRandString(6, letter)
+func GenerateRandomKey(length int) string {
+	return generateRandString(length, letter)
 }
 
 func generateRandString(length int, s string) string {

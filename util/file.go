@@ -2,14 +2,13 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-23 22:29:13
- * @LastEditTime: 2023-09-24 00:08:55
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-05-23 17:11:41
+ * @LastEditors: yujiajie
  */
 package util
 
 import (
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -82,7 +81,7 @@ func GetFileType(src string) (string, error) {
 }
 
 func GetDirFiles(dir string) ([]string, error) {
-	dirList, err := ioutil.ReadDir(dir)
+	dirList, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

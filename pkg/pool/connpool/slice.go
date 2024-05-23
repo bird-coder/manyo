@@ -1,4 +1,4 @@
-package pool
+package connpool
 
 import (
 	"context"
@@ -28,6 +28,7 @@ type Slice struct {
 	conf *PoolConfig
 }
 
+// 创建连接池实例
 func NewSlice(c *PoolConfig) *Slice {
 	pool := &Slice{
 		conf: c,
@@ -36,6 +37,7 @@ func NewSlice(c *PoolConfig) *Slice {
 	return pool
 }
 
+// 重载连接池配置
 func (p *Slice) Reload(c *PoolConfig) error {
 	p.mu.Lock()
 	p.setActive(c.Active)
@@ -45,18 +47,21 @@ func (p *Slice) Reload(c *PoolConfig) error {
 	return nil
 }
 
+// 获取当前连接数
 func (p *Slice) ActiveCount() int {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.active
 }
 
+// 获取空闲连接数
 func (p *Slice) IdleCount() int {
 	p.mu.Lock()
 	p.mu.Unlock()
 	return len(p.freeConn)
 }
 
+// 初始化
 func (p *Slice) lazyInit() {
 	if atomic.LoadUint32(&p.chInit) == 1 {
 		return
@@ -76,6 +81,7 @@ func (p *Slice) lazyInit() {
 	p.mu.Unlock()
 }
 
+// 获取连接
 func (p *Slice) Get(ctx context.Context) (io.Closer, error) {
 	if p.conf.Wait && p.conf.Active > 0 {
 		p.lazyInit()
@@ -134,6 +140,7 @@ func (p *Slice) Get(ctx context.Context) (io.Closer, error) {
 	return c, nil
 }
 
+// 连接放回池
 func (p *Slice) Put(c io.Closer, forceClose bool) error {
 	p.mu.Lock()
 	pc := &poolConn{
@@ -164,6 +171,7 @@ func (p *Slice) Put(c io.Closer, forceClose bool) error {
 	return nil
 }
 
+// 删除链接
 func (p *Slice) popItemLocked() *poolConn {
 	connNum := len(p.freeConn)
 	pc := p.freeConn[0]
@@ -204,6 +212,7 @@ func (p *Slice) setIdle(n int) {
 	}
 }
 
+// 清理空闲连接的协程
 func (p *Slice) startCleanerLocked(d time.Duration) {
 	if d <= 0 {
 		return
@@ -222,6 +231,7 @@ func (p *Slice) startCleanerLocked(d time.Duration) {
 	}
 }
 
+// 清理空闲连接
 func (p *Slice) staleCleaner() {
 	d := time.Duration(p.conf.IdleTimeout)
 	const minInterval = 100 * time.Millisecond
