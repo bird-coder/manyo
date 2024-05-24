@@ -92,102 +92,53 @@ func toZapLevel(level Level) zapcore.Level {
 	return logLevel
 }
 
-func (zl *zaplog) Log(level Level, msg string, fields ...zapcore.Field) error {
-	fields = append(fields, zl.fields...)
-	switch level {
-	case InfoLevel:
-		zl.zap.Info(msg, fields...)
-	case DebugLevel:
-		zl.zap.Debug(msg, fields...)
-	case WarnLevel:
-		zl.zap.Warn(msg, fields...)
-	case ErrorLevel:
-		zl.zap.Error(msg, fields...)
-	case PanicLevel:
-		zl.zap.Panic(msg, fields...)
-	case DPanicLevel:
-		zl.zap.DPanic(msg, fields...)
-	case FatalLevel:
-		zl.zap.Fatal(msg, fields...)
-	}
-	return nil
-}
-
-func (zl *zaplog) Info(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Debug(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Warn(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Error(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Panic(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) DPanic(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Fatal(msg string, fields ...zapcore.Field) error {
-	return zl.Log(InfoLevel, msg, fields...)
-}
-
-func (zl *zaplog) Logf(level Level, format string, args ...interface{}) error {
+func (zl *zaplog) Log(level Level, format string, args ...interface{}) error {
 	msg := fmt.Sprintf(format, args...)
 	switch level {
 	case InfoLevel:
-		zl.zap.Info(msg)
+		zl.zap.Info(msg, zl.fields...)
 	case DebugLevel:
-		zl.zap.Debug(msg)
+		zl.zap.Debug(msg, zl.fields...)
 	case WarnLevel:
-		zl.zap.Warn(msg)
+		zl.zap.Warn(msg, zl.fields...)
 	case ErrorLevel:
-		zl.zap.Error(msg)
+		zl.zap.Error(msg, zl.fields...)
 	case PanicLevel:
-		zl.zap.Panic(msg)
+		zl.zap.Panic(msg, zl.fields...)
 	case DPanicLevel:
-		zl.zap.DPanic(msg)
+		zl.zap.DPanic(msg, zl.fields...)
 	case FatalLevel:
-		zl.zap.Fatal(msg)
+		zl.zap.Fatal(msg, zl.fields...)
 	}
 	return nil
 }
 
-func (zl *zaplog) Infof(format string, args ...any) error {
-	return zl.Logf(InfoLevel, format, args...)
+func (zl *zaplog) Info(format string, args ...any) error {
+	return zl.Log(InfoLevel, format, args...)
 }
 
-func (zl *zaplog) Debugf(format string, args ...any) error {
-	return zl.Logf(DebugLevel, format, args...)
+func (zl *zaplog) Debug(format string, args ...any) error {
+	return zl.Log(DebugLevel, format, args...)
 }
 
-func (zl *zaplog) Warnf(format string, args ...any) error {
-	return zl.Logf(WarnLevel, format, args...)
+func (zl *zaplog) Warn(format string, args ...any) error {
+	return zl.Log(WarnLevel, format, args...)
 }
 
-func (zl *zaplog) Errorf(format string, args ...any) error {
-	return zl.Logf(ErrorLevel, format, args...)
+func (zl *zaplog) Error(format string, args ...any) error {
+	return zl.Log(ErrorLevel, format, args...)
 }
 
-func (zl *zaplog) Panicf(format string, args ...any) error {
-	return zl.Logf(PanicLevel, format, args...)
+func (zl *zaplog) Panic(format string, args ...any) error {
+	return zl.Log(PanicLevel, format, args...)
 }
 
-func (zl *zaplog) DPanicf(format string, args ...any) error {
-	return zl.Logf(DPanicLevel, format, args...)
+func (zl *zaplog) DPanic(format string, args ...any) error {
+	return zl.Log(DPanicLevel, format, args...)
 }
 
-func (zl *zaplog) Fatalf(format string, args ...any) error {
-	return zl.Logf(FatalLevel, format, args...)
+func (zl *zaplog) Fatal(format string, args ...any) error {
+	return zl.Log(FatalLevel, format, args...)
 }
 
 func (zl *zaplog) WithFields(fields ...zapcore.Field) {

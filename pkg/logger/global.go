@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-05-23 17:52:21
  * @LastEditors: yujiajie
- * @LastEditTime: 2024-05-23 17:52:56
+ * @LastEditTime: 2024-05-24 09:18:27
  * @FilePath: /manyo/pkg/logger/global.go
  * @Description:
  */
@@ -39,31 +39,31 @@ func GetLogger() Logger {
 }
 
 func Infof(format string, args ...interface{}) {
-	global.Logf(InfoLevel, format, args...)
+	global.Log(InfoLevel, format, args...)
 }
 
 func Debugf(format string, args ...interface{}) {
-	global.Logf(DebugLevel, format, args...)
+	global.Log(DebugLevel, format, args...)
 }
 
 func Warnf(format string, args ...interface{}) {
-	global.Logf(WarnLevel, format, args...)
+	global.Log(WarnLevel, format, args...)
 }
 
 func Errorf(format string, args ...interface{}) {
-	global.Logf(ErrorLevel, format, args...)
+	global.Log(ErrorLevel, format, args...)
 }
 
 func Panicf(format string, args ...interface{}) {
-	global.Logf(PanicLevel, format, args...)
+	global.Log(PanicLevel, format, args...)
 }
 
 func DPanicf(format string, args ...interface{}) {
-	global.Logf(DPanicLevel, format, args...)
+	global.Log(DPanicLevel, format, args...)
 }
 
 func Fatalf(format string, args ...interface{}) {
-	global.Logf(FatalLevel, format, args...)
+	global.Log(FatalLevel, format, args...)
 	os.Exit(1)
 }
 
