@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-05-14 09:54:54
  * @LastEditors: yujiajie
- * @LastEditTime: 2024-05-23 17:56:42
+ * @LastEditTime: 2024-07-23 15:16:34
  * @FilePath: /manyo/pkg/storage/locker/redis.go
  * @Description:
  */
@@ -12,12 +12,24 @@ import (
 	"context"
 	"time"
 
+	"github.com/bird-coder/manyo/config"
 	"github.com/bsm/redislock"
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRedis(client *redis.Client, options *redis.Options) (*Redis, error) {
+func NewRedis(client *redis.Client, cfg *config.RedisDailConfig) (*Redis, error) {
 	if client == nil {
+		options := &redis.Options{
+			Addr:         cfg.Addr,
+			Password:     cfg.Password,
+			DB:           cfg.Db,
+			Protocol:     cfg.Protocol,
+			DialTimeout:  time.Duration(cfg.DialTimeout) * time.Second,
+			ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
+			WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
+			PoolSize:     cfg.PoolSize,
+			MinIdleConns: cfg.IdleConns,
+		}
 		client = redis.NewClient(options)
 	}
 	r := &Redis{

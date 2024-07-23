@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-23 19:13:13
- * @LastEditTime: 2024-05-23 17:32:41
+ * @LastEditTime: 2024-07-23 15:14:15
  * @LastEditors: yujiajie
  */
 package util
@@ -13,16 +13,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func HttpGet(url string, params map[string]interface{}) ([]byte, error) {
-	targetUrl := url
+var (
+	defaultTimeout = 30 * time.Second
+)
+
+func HttpGet(targetUrl string, params map[string]interface{}) ([]byte, error) {
 	if len(params) > 0 {
-		targetUrl = url + "?" + BuildParams(params)
+		targetUrl = targetUrl + "?" + BuildParams(params)
 	}
 
 	client := &http.Client{}
@@ -34,7 +38,7 @@ func HttpGet(url string, params map[string]interface{}) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http get error, url: %s, params: %v, err: %v", url, params, err)
+		return nil, fmt.Errorf("http get error, url: %s, params: %v, err: %v", targetUrl, params, err)
 	}
 	defer resp.Body.Close()
 
@@ -43,12 +47,36 @@ func HttpGet(url string, params map[string]interface{}) ([]byte, error) {
 	return res, nil
 }
 
-func HttpPost(url string, data map[string]interface{}) ([]byte, error) {
-	client := &http.Client{Timeout: 5 * time.Second}
+func HttpPost(targetUrl string, data map[string]interface{}) ([]byte, error) {
+	client := &http.Client{Timeout: defaultTimeout}
 	jsonStr, _ := json.Marshal(data)
-	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := client.Post(targetUrl, "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return nil, fmt.Errorf("http post error, url: %s, data: %v, err: %v", url, data, err)
+		return nil, fmt.Errorf("http post error, url: %s, data: %v, err: %v", targetUrl, data, err)
+	}
+	defer resp.Body.Close()
+
+	res, _ := io.ReadAll(resp.Body)
+
+	return res, nil
+}
+
+func HttpPostForm(targetUrl string, data map[string]interface{}) ([]byte, error) {
+	client := &http.Client{Timeout: defaultTimeout}
+
+	postData := url.Values{}
+	for k, v := range data {
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.Float32, reflect.Float64:
+			postData.Set(k, strconv.FormatFloat(rv.Float(), 'f', -1, 64))
+		default:
+			postData.Set(k, fmt.Sprintf("%v", v))
+		}
+	}
+	resp, err := client.PostForm(targetUrl, postData)
+	if err != nil {
+		return nil, fmt.Errorf("http post error, url: %s, data: %v, err: %v", targetUrl, data, err)
 	}
 	defer resp.Body.Close()
 

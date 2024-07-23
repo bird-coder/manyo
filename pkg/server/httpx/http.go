@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-05-13 17:41:28
  * @LastEditors: yujiajie
- * @LastEditTime: 2024-05-23 17:58:44
+ * @LastEditTime: 2024-05-31 14:42:06
  * @FilePath: /manyo/pkg/server/httpx/http.go
  * @Description:
  */
@@ -41,7 +41,7 @@ func NewHttpServer(ctx context.Context, cfg *config.HttpConfig, engine http.Hand
 func (s *HttpServer) Start() error {
 	if err := s.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
-			logger.Infof("waiting for server(%s) finish...", s.Addr)
+			logger.Info("waiting for server(%s) finish...", s.Addr)
 		}
 		return err
 	}
@@ -50,9 +50,9 @@ func (s *HttpServer) Start() error {
 
 func (s *HttpServer) Stop() error {
 	if err := s.Shutdown(s.ctx); err != nil {
-		logger.Infof("server(%s) shutdown error: %v", s.Addr, err)
+		logger.Info("server(%s) shutdown error: %v", s.Addr, err)
 		return err
 	}
-	logger.Infof("server(%s) shutdown processed success", s.Addr)
+	logger.Info("server(%s) shutdown processed success", s.Addr)
 	return nil
 }

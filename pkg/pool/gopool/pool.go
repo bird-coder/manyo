@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-05-23 17:39:39
  * @LastEditors: yujiajie
- * @LastEditTime: 2024-05-23 17:39:56
+ * @LastEditTime: 2024-05-31 14:41:57
  * @FilePath: /manyo/pkg/pool/gopool/pool.go
  * @Description:
  */
@@ -29,7 +29,7 @@ func (pool *Pool) Run(fn func()) {
 		defer func() {
 			<-pool.ch
 			if err := recover(); err != nil {
-				logger.Errorf("goroutine run err: %v", err)
+				logger.Error("goroutine run err: %v", err)
 			}
 		}()
 		fn()
