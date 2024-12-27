@@ -1,8 +1,8 @@
 /*
- * @Description:
+ * @Description: 一致性hash算法
  * @Author: yuanshisan
  * @Date: 2022-06-28 16:04:53
- * @LastEditTime: 2024-05-23 17:36:30
+ * @LastEditTime: 2024-12-27 16:06:35
  * @LastEditors: yujiajie
  */
 package hash

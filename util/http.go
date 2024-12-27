@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-23 19:13:13
- * @LastEditTime: 2024-07-23 15:14:15
+ * @LastEditTime: 2024-12-27 16:12:06
  * @LastEditors: yujiajie
  */
 package util
@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -22,6 +23,24 @@ import (
 
 var (
 	defaultTimeout = 30 * time.Second
+
+	client = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          500,
+			MaxConnsPerHost:       200,
+			MaxIdleConnsPerHost:   100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+		Timeout: defaultTimeout,
+	}
 )
 
 func HttpGet(targetUrl string, params map[string]interface{}) ([]byte, error) {
@@ -29,7 +48,6 @@ func HttpGet(targetUrl string, params map[string]interface{}) ([]byte, error) {
 		targetUrl = targetUrl + "?" + BuildParams(params)
 	}
 
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
 		return nil, err
@@ -48,7 +66,6 @@ func HttpGet(targetUrl string, params map[string]interface{}) ([]byte, error) {
 }
 
 func HttpPost(targetUrl string, data map[string]interface{}) ([]byte, error) {
-	client := &http.Client{Timeout: defaultTimeout}
 	jsonStr, _ := json.Marshal(data)
 	resp, err := client.Post(targetUrl, "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
@@ -62,8 +79,6 @@ func HttpPost(targetUrl string, data map[string]interface{}) ([]byte, error) {
 }
 
 func HttpPostForm(targetUrl string, data map[string]interface{}) ([]byte, error) {
-	client := &http.Client{Timeout: defaultTimeout}
-
 	postData := url.Values{}
 	for k, v := range data {
 		rv := reflect.ValueOf(v)

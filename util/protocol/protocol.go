@@ -2,10 +2,10 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-02-17 14:33:03
- * @LastEditTime: 2023-02-23 14:49:01
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-12-27 16:11:23
+ * @LastEditors: yujiajie
  */
-package util
+package protocol
 
 import (
 	"bytes"

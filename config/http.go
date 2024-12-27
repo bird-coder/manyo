@@ -2,14 +2,14 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-10-03 14:17:11
- * @LastEditTime: 2023-10-03 14:18:10
- * @LastEditors: yuanshisan
+ * @LastEditTime: 2024-12-27 15:58:28
+ * @LastEditors: yujiajie
  */
 package config
 
 type HttpConfig struct {
-	Addr           string
-	ReadTimeout    int
-	WriteTimeout   int
-	MaxHeaderBytes int
+	Addr           string `mapstructure:"addr"`
+	ReadTimeout    int    `mapstructure:"readTimeout"`
+	WriteTimeout   int    `mapstructure:"writeTimeout"`
+	MaxHeaderBytes int    `mapstructure:"maxHeaderBytes"`
 }

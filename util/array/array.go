@@ -2,10 +2,10 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-22 22:27:43
- * @LastEditTime: 2024-07-23 15:12:33
+ * @LastEditTime: 2024-12-27 16:10:46
  * @LastEditors: yujiajie
  */
-package util
+package array
 
 // 比较两个切片，获取第一个切片相对于第一个切片的差集
 func DiffSlice[S ~[]E, E comparable](src S, dst S) []E {

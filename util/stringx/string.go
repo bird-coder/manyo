@@ -2,10 +2,10 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-22 23:16:06
- * @LastEditTime: 2024-05-23 17:11:12
+ * @LastEditTime: 2024-12-27 16:11:38
  * @LastEditors: yujiajie
  */
-package util
+package stringx
 
 import (
 	"math/rand"
