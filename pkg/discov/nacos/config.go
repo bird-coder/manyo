@@ -2,43 +2,43 @@
  * @Author: yujiajie
  * @Date: 2025-01-24 09:06:26
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-03-09 16:42:37
- * @FilePath: /Go-Base/pkg/discov/nacos/config.go
+ * @LastEditTime: 2025-06-04 17:29:25
+ * @FilePath: /manyo/pkg/discov/nacos/config.go
  * @Description:
  */
 package nacos
 
 type NacosConf struct {
-	Client  NacosClientConf
-	Servers []NacosServerConf
+	Client  NacosClientConf   `mapstructure:"client"`
+	Servers []NacosServerConf `mapstructure:"servers"`
 }
 
 type NacosClientConf struct {
-	NamespaceId string
-	LogDir      string
-	CacheDir    string
-	LogLevel    string
-	Auth        *NaocsAuth
+	NamespaceId string     `mapstructure:"namespace"`
+	LogDir      string     `mapstructure:"logDir"`
+	CacheDir    string     `mapstructure:"cacheDie"`
+	LogLevel    string     `mapstructure:"logLevel"`
+	Auth        *NaocsAuth `mapstructure:"auth"`
 }
 
 type NaocsAuth struct {
-	Username string
-	Password string
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"pwd_password"`
 
 	//以下是使用阿里云nacos时配置
-	Endpoint  string //阿里云服务端点，配置后可以不需要 NacosServerConf
-	RegionId  string
-	AccessKey string
-	SecretKey string
+	Endpoint  string `mapstructure:"endpoint"` //阿里云服务端点，配置后可以不需要 NacosServerConf
+	RegionId  string `mapstructure:"regionId"`
+	AccessKey string `mapstructure:"accessKey"`
+	SecretKey string `mapstructure:"pwd_secretKey"`
 }
 
 type NacosServerConf struct {
-	Host
+	Host `mapstructure:"host"`
 }
 
 type Host struct {
-	Ip   string
-	Port uint64
+	Ip   string `mapstructure:"ip"`
+	Port uint64 `mapstructure:"port"`
 }
 
 type ServiceInstance struct {

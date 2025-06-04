@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 19:42:41
  * @LastEditors: yujiajie
- * @LastEditTime: 2024-12-27 16:25:09
+ * @LastEditTime: 2025-06-04 17:58:38
  * @FilePath: /manyo/pkg/core/type.go
  * @Description:
  */
@@ -18,8 +18,11 @@ import (
 )
 
 type Core interface {
-	SetAppName(name string)
-	GetAppName() string
+	SetSysInfo(cfg *SysConfig)
+	GetSysInfo() *SysConfig
+
+	SetServerId(serverId uint8)
+	GetServerId() uint8
 
 	SetDb(key string, db *gorm.DB)
 	GetDb(key string) *gorm.DB
@@ -40,12 +43,6 @@ type Core interface {
 
 	AddConsumer(key string, consumer rocketmq.Consumer)
 	GetConsumer(key string) []rocketmq.Consumer
-
-	SetEnv(env string)
-	GetEnv() string
-
-	SetServerId(serverId uint8)
-	GetServerId() uint8
 
 	Init() error
 }

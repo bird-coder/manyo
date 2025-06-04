@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-10-03 14:13:47
- * @LastEditTime: 2024-03-16 22:47:24
+ * @LastEditTime: 2025-06-04 17:20:08
  * @LastEditors: yujiajie
  */
 package config
@@ -16,14 +16,14 @@ type LockConfig struct {
 }
 
 type RedisDailConfig struct {
-	DialTimeout  int64
-	ReadTimeout  int64
-	WriteTimeout int64
-	Protocol     int
-	Addr         string
-	Db           int
-	Password     string
-	PoolSize     int
-	IdleConns    int
-	MaxRetry     int
+	DialTimeout  int64  `mapstructure:"dialTimeout"`
+	ReadTimeout  int64  `mapstructure:"readTimeout"`
+	WriteTimeout int64  `mapstructure:"writeTimeout"`
+	Protocol     int    `mapstructure:"protocol"`
+	Addr         string `mapstructure:"addr"`
+	Db           int    `mapstructure:"db"`
+	Password     string `mapstructure:"pwd_password"`
+	PoolSize     int    `mapstructure:"poolSize"`
+	IdleConns    int    `mapstructure:"idleConns"`
+	MaxRetry     int    `mapstructure:"maxRetry"`
 }

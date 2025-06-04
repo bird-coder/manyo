@@ -3,6 +3,7 @@ package core
 import (
 	"sync"
 
+	"github.com/bird-coder/manyo/constant"
 	"github.com/bird-coder/manyo/lib/rocketmq"
 	"github.com/bird-coder/manyo/pkg/logger"
 	"github.com/bird-coder/manyo/pkg/storage/cache"
@@ -23,20 +24,23 @@ const (
 	CONFIG_KEY_ROCKET   = "rocketmq"
 	CONFIG_KEY_CONSUMER = "consumers"
 	CONFIG_KEY_DISCOVER = "discover"
+	CONFIG_KEY_NACOS    = "nacos"
+)
+
+var (
+	defaultTimeZone = "Asia/Shanghai"
 )
 
 var Kernal Core = NewKernal()
 
 type Container struct {
-	name      string
+	sys       *SysConfig
 	dbs       map[string]*gorm.DB
 	configs   map[string]any
 	logs      map[string]logger.Logger
 	rds       map[string]cache.AdapterCache
 	consumers map[string][]rocketmq.Consumer
 	locker    locker.AdapterLocker
-	env       string
-	serverId  uint8
 
 	mux sync.RWMutex
 }
@@ -51,16 +55,35 @@ func NewKernal() *Container {
 	}
 }
 
-func (e *Container) SetAppName(name string) {
+func (e *Container) SetSysInfo(cfg *SysConfig) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.name = name
+
+	if len(cfg.Environment) == 0 {
+		cfg.Environment = constant.Dev.String()
+	}
+	if len(cfg.Timezone) == 0 {
+		cfg.Timezone = defaultTimeZone
+	}
+	e.sys = cfg
 }
 
-func (e *Container) GetAppName() string {
+func (e *Container) GetSysInfo() *SysConfig {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.name
+	return e.sys
+}
+
+func (e *Container) SetServerId(serverId uint8) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.sys.ServerId = serverId
+}
+
+func (e *Container) GetServerId() uint8 {
+	e.mux.RLock()
+	defer e.mux.RUnlock()
+	return e.sys.ServerId
 }
 
 func (e *Container) SetDb(key string, db *gorm.DB) {
@@ -148,30 +171,6 @@ func (e *Container) GetConsumer(key string) []rocketmq.Consumer {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
 	return e.consumers[key]
-}
-
-func (e *Container) SetEnv(env string) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.env = env
-}
-
-func (e *Container) GetEnv() string {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.env
-}
-
-func (e *Container) SetServerId(serverId uint8) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.serverId = serverId
-}
-
-func (e *Container) GetServerId() uint8 {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.serverId
 }
 
 func (e *Container) Init() error {

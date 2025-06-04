@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yujiajie
  * @Date: 2024-03-06 22:46:08
- * @LastEditTime: 2024-03-06 22:46:58
+ * @LastEditTime: 2025-06-04 17:21:13
  * @LastEditors: yujiajie
  */
 package constant
@@ -28,7 +28,9 @@ const (
 
 const (
 	ContentEncoding  = "Content-Encoding"
+	ContentLength    = "Content-Length"
 	ContentSecurity  = "X-Content-Security"
+	ContentSignature = "X-Content-Signature"
 	RequestUriHeader = "X-Request-Uri"
 	ApplicationJson  = "application/json"
 	ContentType      = "Content-Type"
