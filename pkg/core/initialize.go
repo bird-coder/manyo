@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 20:13:05
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 17:58:42
+ * @LastEditTime: 2025-06-04 18:11:37
  * @FilePath: /manyo/pkg/core/initialize.go
  * @Description:
  */
@@ -61,6 +61,10 @@ func setupLog() {
 }
 
 func setServerId() error {
+	//如果serverId通过手动配置，则使用配置，否则通过redis自增id生成
+	if Kernal.GetServerId() > 0 {
+		return nil
+	}
 	rds := Kernal.GetCacheAdapter(DEFAULT_KEY)
 	if rds == nil {
 		return fmt.Errorf("生成serverid失败, cache未初始化")
