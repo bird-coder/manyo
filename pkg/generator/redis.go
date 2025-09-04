@@ -2,8 +2,8 @@
  * @Author: yujiajie
  * @Date: 2025-06-03 18:19:26
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 12:03:28
- * @FilePath: /Go-Base/pkg/generator/redis.go
+ * @LastEditTime: 2025-09-03 18:07:20
+ * @FilePath: /manyo/pkg/generator/redis.go
  * @Description:
  */
 package generator
@@ -102,7 +102,7 @@ type RedisGenerator struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	opts options
+	opts *options
 
 	rds   *redis.Client
 	maxId uint64
@@ -118,16 +118,20 @@ func NewRedisGenerator(rds *redis.Client, maxId uint64, opts ...Option) *RedisGe
 	if rds == nil {
 		return nil
 	}
-	op := options{
+	op := &options{
 		ctx:         context.Background(),
 		appName:     appName,
-		serverKey:   fmt.Sprintf(serverKey, appName),
-		activeKey:   fmt.Sprintf(activeKey, appName),
 		expireTime:  15,
 		refreshTime: 10,
 	}
 	for _, opt := range opts {
-		opt(&op)
+		opt(op)
+	}
+	if len(op.serverKey) == 0 {
+		op.serverKey = fmt.Sprintf(serverKey, op.appName)
+	}
+	if len(op.activeKey) == 0 {
+		op.activeKey = fmt.Sprintf(activeKey, op.appName)
 	}
 	if maxId > math.MaxInt64 {
 		maxId = math.MaxInt64

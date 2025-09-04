@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2025-01-24 09:06:26
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 17:29:25
+ * @LastEditTime: 2025-09-03 18:14:03
  * @FilePath: /manyo/pkg/discov/nacos/config.go
  * @Description:
  */
@@ -15,9 +15,9 @@ type NacosConf struct {
 
 type NacosClientConf struct {
 	NamespaceId string     `mapstructure:"namespace"`
-	LogDir      string     `mapstructure:"logDir"`
-	CacheDir    string     `mapstructure:"cacheDie"`
-	LogLevel    string     `mapstructure:"logLevel"`
+	LogDir      string     `mapstructure:"logdir"`
+	CacheDir    string     `mapstructure:"cachedir"`
+	LogLevel    string     `mapstructure:"loglevel"`
 	Auth        *NaocsAuth `mapstructure:"auth"`
 }
 
@@ -33,7 +33,8 @@ type NaocsAuth struct {
 }
 
 type NacosServerConf struct {
-	Host `mapstructure:"host"`
+	Ip   string `mapstructure:"ip"`
+	Port uint64 `mapstructure:"port"`
 }
 
 type Host struct {
@@ -42,8 +43,10 @@ type Host struct {
 }
 
 type ServiceInstance struct {
-	ServiceName string //服务名
-	ClusterName string //机器集群名
-	GroupName   string //业务分组名
+	ID          string            //服务编号
+	ServiceName string            //服务名
+	ClusterName string            //机器集群名
+	GroupName   string            //业务分组名
+	Metadata    map[string]string //服务原数据
 	Hosts       []Host
 }

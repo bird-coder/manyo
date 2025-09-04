@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 19:42:41
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 17:58:38
+ * @LastEditTime: 2025-09-03 18:13:25
  * @FilePath: /manyo/pkg/core/type.go
  * @Description:
  */
@@ -44,5 +44,5 @@ type Core interface {
 	AddConsumer(key string, consumer rocketmq.Consumer)
 	GetConsumer(key string) []rocketmq.Consumer
 
-	Init() error
+	Init(string) error
 }

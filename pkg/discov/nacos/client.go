@@ -2,8 +2,8 @@
  * @Author: yujiajie
  * @Date: 2025-03-09 15:22:17
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-03-15 20:01:49
- * @FilePath: /Go-Base/pkg/discov/nacos/client.go
+ * @LastEditTime: 2025-09-03 18:13:40
+ * @FilePath: /manyo/pkg/discov/nacos/client.go
  * @Description:
  */
 package nacos
@@ -32,7 +32,7 @@ func formatConfig(cfg *NacosConf) vo.NacosClientParam {
 		clientConfig.AccessKey = cfg.Client.Auth.AccessKey
 		clientConfig.SecretKey = cfg.Client.Auth.SecretKey
 	}
-	serverConfigs := make([]constant.ServerConfig, len(cfg.Servers))
+	serverConfigs := make([]constant.ServerConfig, 0, len(cfg.Servers))
 	for _, serverCfg := range cfg.Servers {
 		serverConfigs = append(serverConfigs, *constant.NewServerConfig(serverCfg.Ip, serverCfg.Port))
 	}

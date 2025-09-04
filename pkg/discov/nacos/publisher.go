@@ -2,8 +2,8 @@
  * @Author: yujiajie
  * @Date: 2025-01-26 14:16:38
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-03-15 21:09:20
- * @FilePath: /Go-Base/pkg/discov/nacos/publisher.go
+ * @LastEditTime: 2025-09-03 18:15:05
+ * @FilePath: /manyo/pkg/discov/nacos/publisher.go
  * @Description:
  */
 package nacos
@@ -37,6 +37,7 @@ func (p *Publisher) Register(instances ...*ServiceInstance) error {
 				ServiceName: instance.ServiceName,
 				ClusterName: instance.ClusterName,
 				GroupName:   instance.GroupName,
+				Metadata:    instance.Metadata,
 				Enable:      true,
 				Healthy:     true,
 				Ephemeral:   true,

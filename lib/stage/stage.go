@@ -1,0 +1,165 @@
+/*
+ * @Author: yujiajie
+ * @Date: 2025-07-11 17:26:40
+ * @LastEditors: yujiajie
+ * @LastEditTime: 2025-09-04 10:49:03
+ * @FilePath: /manyo/lib/stage/stage.go
+ * @Description:
+ */
+package stage
+
+import (
+	"context"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/bird-coder/manyo/pkg/logger"
+	"github.com/bird-coder/manyo/pkg/rungroup"
+)
+
+type App struct {
+	opts   *options
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	closeChan chan struct{}
+
+	once sync.Once
+}
+
+func NewApp(opts ...optionFunc) *App {
+	o := &options{
+		ctx:         context.Background(),
+		stopTimeout: 5 * time.Second,
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
+	ctx, cancel := context.WithCancel(o.ctx)
+
+	return &App{
+		opts:      o,
+		ctx:       ctx,
+		cancel:    cancel,
+		closeChan: make(chan struct{}),
+	}
+}
+
+func (a *App) Run() error {
+	if err := a.beforeStart(); err != nil {
+		return err
+	}
+
+	go func() {
+		a.start()
+		a.stop()
+	}()
+
+	if err := a.afterStart(); err != nil {
+		return err
+	}
+
+	<-a.closeChan
+
+	if err := a.afterStop(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) stop() error {
+	a.once.Do(func() {
+		close(a.closeChan)
+	})
+	return nil
+}
+
+func (a *App) start() error {
+	var g rungroup.Group
+	{
+		term := make(chan os.Signal, 1)
+		signal.Notify(term, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+		// ticker := time.NewTicker(time.Second * 60)
+		g.Add(func() error {
+			for {
+				select {
+				case <-term:
+					return a.beforeStop()
+				case <-a.ctx.Done():
+					return nil
+				}
+			}
+		}, func(err error) {
+			a.cancel()
+		})
+	}
+
+	for _, srv := range a.opts.servers {
+		g.Add(func() error {
+			return srv.Start()
+		}, func(err error) {
+			srv.Stop()
+		})
+	}
+
+	if err := g.Run(); err != nil {
+		logger.Error("进程异常退出, err: %v", err)
+	}
+	return nil
+}
+
+/**
+ * @description: 服务启动前执行
+ * @return {error}
+ */
+func (a *App) beforeStart() error {
+	for _, fn := range a.opts.beforeStart {
+		if err := fn(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/**
+ * @description: 服务启动后执行
+ * @return {error}
+ */
+func (a *App) afterStart() error {
+	for _, fn := range a.opts.afterStart {
+		if err := fn(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/**
+ * @description: 服务停止前执行
+ * @return {error}
+ */
+func (a *App) beforeStop() error {
+	for _, fn := range a.opts.beforeStop {
+		if err := fn(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/**
+ * @description: 服务停止后执行
+ * @return {error}
+ */
+func (a *App) afterStop() error {
+	for _, fn := range a.opts.afterStop {
+		if err := fn(); err != nil {
+			return err
+		}
+	}
+	return nil
+}

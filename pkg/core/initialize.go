@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 20:13:05
  * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 18:11:37
+ * @LastEditTime: 2025-09-03 18:12:49
  * @FilePath: /manyo/pkg/core/initialize.go
  * @Description:
  */
@@ -19,6 +19,14 @@ import (
 	"github.com/bird-coder/manyo/pkg/storage/database"
 	"github.com/bird-coder/manyo/pkg/storage/locker"
 )
+
+func loadConfig(configFile string) error {
+	appConfig := new(BaseAppConfig)
+	if err := appConfig.LoadConfig(configFile); err != nil {
+		return fmt.Errorf("读取配置失败[%v]", err)
+	}
+	return nil
+}
 
 func setupRedis() error {
 	rdsConfigs := Kernal.GetConfig(CONFIG_KEY_REDIS).(map[string]*config.RedisDailConfig)
@@ -52,12 +60,13 @@ func setupDB() error {
 	return nil
 }
 
-func setupLog() {
+func setupLog() error {
 	logConfigs := Kernal.GetConfig(CONFIG_KEY_LOGGER).(map[string]*config.LoggerConfig)
 	for k, cfg := range logConfigs {
 		log := logger.NewLogger(cfg, Kernal.GetSysInfo().Environment)
 		Kernal.SetLogger(k, log)
 	}
+	return nil
 }
 
 func setServerId() error {

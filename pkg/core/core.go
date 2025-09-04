@@ -173,9 +173,14 @@ func (e *Container) GetConsumer(key string) []rocketmq.Consumer {
 	return e.consumers[key]
 }
 
-func (e *Container) Init() error {
+func (e *Container) Init(configFile string) error {
 	var err error
-	setupLog()
+	if err = loadConfig(configFile); err != nil {
+		return err
+	}
+	if err = setupLog(); err != nil {
+		return err
+	}
 	if err = setupRedis(); err != nil {
 		return err
 	}
