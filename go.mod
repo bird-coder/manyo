@@ -1,8 +1,6 @@
 module github.com/bird-coder/manyo
 
-go 1.23.0
-
-toolchain go1.23.7
+go 1.26
 
 require (
 	github.com/alibaba/sentinel-golang v1.0.4
@@ -129,3 +127,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/lyft/protoc-gen-validate => github.com/envoyproxy/protoc-gen-validate v0.0.13

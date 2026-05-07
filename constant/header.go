@@ -2,8 +2,8 @@
  * @Description:
  * @Author: yujiajie
  * @Date: 2024-03-06 22:46:08
- * @LastEditTime: 2025-06-04 17:21:13
- * @LastEditors: yujiajie
+ * @LastEditTime: 2026-05-07 14:45:00
+ * @LastEditors: yujiajie 1037297660@qq.com
  */
 package constant
 
@@ -33,6 +33,7 @@ const (
 	ContentSignature = "X-Content-Signature"
 	RequestUriHeader = "X-Request-Uri"
 	ApplicationJson  = "application/json"
+	ApplicationForm  = "application/x-www-form-urlencoded"
 	ContentType      = "Content-Type"
 	JsonContentType  = "application/json; charset=utf-8"
 	KeyField         = "key"
