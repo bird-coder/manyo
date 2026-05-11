@@ -1,9 +1,9 @@
 /*
  * @Author: yujiajie
  * @Date: 2025-07-11 17:26:34
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-07-24 09:39:42
- * @FilePath: /Go-Base/lib/stage/options.go
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-09 10:17:33
+ * @FilePath: /manyo/lib/stage/options.go
  * @Description:
  */
 package stage
@@ -14,8 +14,12 @@ import (
 )
 
 type Server interface {
-	Start() error
-	Stop() error
+	Start(ctx context.Context) error
+	Stop(ctx context.Context) error
+}
+
+type Preparable interface {
+	Prepare(ctx context.Context) error
 }
 
 type optionFunc func(o *options)
@@ -45,9 +49,18 @@ func WithStopTimeout(timeout time.Duration) optionFunc {
 	}
 }
 
-func WithServer(servers ...Server) optionFunc {
+func WithServers(servers ...Server) optionFunc {
 	return func(o *options) {
+		if len(servers) == 0 {
+			return
+		}
 		o.servers = servers
+	}
+}
+
+func WithServer(server Server) optionFunc {
+	return func(o *options) {
+		o.servers = append(o.servers, server)
 	}
 }
 

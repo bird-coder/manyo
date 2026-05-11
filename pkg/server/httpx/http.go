@@ -1,8 +1,8 @@
 /*
  * @Author: yujiajie
  * @Date: 2024-05-13 17:41:28
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-06-04 17:27:20
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-09 10:52:37
  * @FilePath: /manyo/pkg/server/httpx/http.go
  * @Description:
  */
@@ -10,6 +10,8 @@ package httpx
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -24,6 +26,7 @@ type HttpServer struct {
 
 	Engine *gin.Engine
 	server *http.Server
+	ln     net.Listener
 
 	ctx context.Context
 }
@@ -49,27 +52,42 @@ func (s *HttpServer) init() {
 	}
 }
 
-func (s *HttpServer) Start() error {
-	var err error
-	if len(s.cfg.CertFile) == 0 || len(s.cfg.KeyFile) == 0 {
-		err = s.server.ListenAndServe()
-	} else {
-		err = s.server.ListenAndServeTLS(s.cfg.CertFile, s.cfg.KeyFile)
-	}
+func (s *HttpServer) Prepare(ctx context.Context) error {
+	ln, err := net.Listen("tcp", s.cfg.Addr)
 	if err != nil {
-		if err == http.ErrServerClosed {
-			logger.Info("waiting for server(%s) finish...", s.cfg.Addr)
-		}
 		return err
 	}
+	s.ln = ln
+
+	logger.Info("server(%s) is listening", s.cfg.Addr)
+
 	return nil
 }
 
-func (s *HttpServer) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (s *HttpServer) Start(ctx context.Context) error {
+	var err error
+	if len(s.cfg.CertFile) == 0 || len(s.cfg.KeyFile) == 0 {
+		err = s.server.Serve(s.ln)
+	} else {
+		err = s.server.ServeTLS(s.ln, s.cfg.CertFile, s.cfg.KeyFile)
+	}
+
+	if errors.Is(err, http.ErrServerClosed) {
+		logger.Info("server(%s) stopped", s.cfg.Addr)
+		return nil
+	}
+	return err
+}
+
+func (s *HttpServer) Stop(ctx context.Context) error {
+	if ctx == nil {
+		var cancel func()
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+	}
+
 	if err := s.server.Shutdown(ctx); err != nil {
-		logger.Info("server(%s) shutdown error: %v", s.cfg.Addr, err)
+		logger.Error("server(%s) shutdown error: %v", s.cfg.Addr, err)
 		return err
 	}
 	logger.Info("server(%s) shutdown processed success", s.cfg.Addr)

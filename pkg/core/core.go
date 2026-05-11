@@ -1,6 +1,7 @@
 package core
 
 import (
+	"maps"
 	"sync"
 
 	"github.com/bird-coder/manyo/constant"
@@ -46,7 +47,12 @@ type Container struct {
 }
 
 func NewKernal() *Container {
+	sysConfig := &SysConfig{
+		Environment: constant.Dev.String(),
+		Timezone:    defaultTimeZone,
+	}
 	return &Container{
+		sys:       sysConfig,
 		dbs:       make(map[string]*gorm.DB),
 		configs:   make(map[string]any),
 		logs:      make(map[string]logger.Logger),
@@ -58,6 +64,10 @@ func NewKernal() *Container {
 func (e *Container) SetSysInfo(cfg *SysConfig) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
+
+	if cfg == nil {
+		return
+	}
 
 	if len(cfg.Environment) == 0 {
 		cfg.Environment = constant.Dev.String()
@@ -99,7 +109,9 @@ func (e *Container) GetDb(key string) *gorm.DB {
 }
 
 func (e *Container) GetAllDb() map[string]*gorm.DB {
-	return e.dbs
+	e.mux.RLock()
+	defer e.mux.RUnlock()
+	return maps.Clone(e.dbs)
 }
 
 func (e *Container) SetConfig(key string, config any) {
@@ -153,11 +165,15 @@ func (e *Container) GetCacheAdapter(key string) cache.AdapterCache {
 
 // SetLockerAdapter 设置分布式锁
 func (e *Container) SetLockerAdapter(c locker.AdapterLocker) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
 	e.locker = c
 }
 
 // GetLockerAdapter 获取分布式锁
 func (e *Container) GetLockerAdapter() locker.AdapterLocker {
+	e.mux.RLock()
+	defer e.mux.RUnlock()
 	return e.locker
 }
 

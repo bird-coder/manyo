@@ -1,14 +1,15 @@
 /*
  * @Author: yujiajie
  * @Date: 2025-01-02 17:19:05
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-01-02 17:48:29
- * @FilePath: /Go-Base/pkg/zrpc/internal/rpcserver.go
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-09 10:44:26
+ * @FilePath: /manyo/pkg/zrpc/internal/rpcserver.go
  * @Description:
  */
 package internal
 
 import (
+	"context"
 	"net"
 	"time"
 
@@ -26,7 +27,9 @@ type (
 		AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor)
 		AddUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor)
 		SetName(string)
-		Start(register RegisterFn) error
+		Prepare(context.Context) error
+		Start(context.Context, RegisterFn) error
+		Stop(context.Context) error
 	}
 
 	rpcServer struct {
@@ -35,6 +38,9 @@ type (
 		options            []grpc.ServerOption
 		streamInterceptors []grpc.StreamServerInterceptor
 		unaryInterceptors  []grpc.UnaryServerInterceptor
+
+		server *grpc.Server
+		ln     net.Listener
 	}
 )
 
@@ -51,8 +57,8 @@ func (s *rpcServer) SetName(name string) {
 	s.name = name
 }
 
-func (s *rpcServer) Start(register RegisterFn) error {
-	lis, err := net.Listen("tcp", s.address)
+func (s *rpcServer) Prepare(ctx context.Context) error {
+	ln, err := net.Listen("tcp", s.address)
 	if err != nil {
 		return err
 	}
@@ -62,11 +68,38 @@ func (s *rpcServer) Start(register RegisterFn) error {
 
 	options := append(s.options, unaryInterceptorOption, streamInterceptorOption)
 	server := grpc.NewServer(options...)
-	register(server)
 
-	defer server.GracefulStop()
+	s.server = server
+	s.ln = ln
 
-	return server.Serve(lis)
+	return nil
+}
+
+func (s *rpcServer) Start(ctx context.Context, register RegisterFn) error {
+	register(s.server)
+
+	return s.server.Serve(s.ln)
+}
+
+func (s *rpcServer) Stop(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		s.server.GracefulStop()
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		s.server.Stop()
+		<-done
+		return ctx.Err()
+	}
 }
 
 func (s *rpcServer) AddOptions(options ...grpc.ServerOption) {

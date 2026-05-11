@@ -1,14 +1,15 @@
 /*
  * @Author: yujiajie
  * @Date: 2025-01-02 16:58:01
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-03-21 17:01:21
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-08 11:35:55
  * @FilePath: /manyo/pkg/zrpc/server.go
  * @Description:
  */
 package zrpc
 
 import (
+	"context"
 	"time"
 
 	"github.com/bird-coder/manyo/pkg/zrpc/internal"
@@ -37,12 +38,16 @@ func NewServer(c RpcServerConf, register internal.RegisterFn) (*RpcServer, error
 	return rpcServer, nil
 }
 
-func (rs *RpcServer) Start() {
-	rs.server.Start(rs.register)
+func (rs *RpcServer) Prepare(ctx context.Context) error {
+	return rs.server.Prepare(ctx)
 }
 
-func (rs *RpcServer) Stop() {
+func (rs *RpcServer) Start(ctx context.Context) error {
+	return rs.server.Start(ctx, rs.register)
+}
 
+func (rs *RpcServer) Stop(ctx context.Context) error {
+	return rs.server.Stop(ctx)
 }
 
 func setupStreamInterceptors(svr internal.Server, c RpcServerConf) {
