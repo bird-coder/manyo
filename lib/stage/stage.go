@@ -61,10 +61,8 @@ type App struct {
 
 	readyChan chan struct{}
 	doneChan  chan struct{}
-	stopChan  chan struct{}
 
 	readyOnce    sync.Once
-	stopOnce     sync.Once
 	shutdownOnce sync.Once
 
 	mu      sync.RWMutex
@@ -89,7 +87,6 @@ func NewApp(opts ...optionFunc) *App {
 		cancel:    cancel,
 		readyChan: make(chan struct{}),
 		doneChan:  make(chan struct{}),
-		stopChan:  make(chan struct{}),
 		state:     StateInit,
 	}
 }
@@ -128,9 +125,7 @@ func (a *App) Stop(ctx context.Context) error {
 		return a.Err()
 	}
 
-	a.stopOnce.Do(func() {
-		close(a.stopChan)
-	})
+	a.cancel()
 
 	select {
 	case <-a.doneChan:
@@ -219,8 +214,6 @@ func (a *App) wait(runErrCh <-chan error) error {
 	case sig := <-term:
 		logger.Info("received signal: %s", sig.String())
 		return nil
-	case <-a.stopChan:
-		return nil
 	case <-a.ctx.Done():
 		if errors.Is(a.ctx.Err(), context.Canceled) {
 			return nil
@@ -274,16 +267,18 @@ func (a *App) stopServices() error {
 		return nil
 	}
 
+	// 优雅退出，由app层做超时控制
 	stopCtx := context.Background()
-	cancel := func() {}
 	if a.opts.stopTimeout > 0 {
+		var cancel func()
 		stopCtx, cancel = context.WithTimeout(context.Background(), a.opts.stopTimeout)
+		defer cancel()
 	}
-	defer cancel()
 
 	errCh := make(chan error, len(services))
 	var wg sync.WaitGroup
 
+	// 倒序退出，避免服务间依赖问题
 	for i := len(services) - 1; i >= 0; i-- {
 		srv := services[i]
 		wg.Add(1)
@@ -293,6 +288,7 @@ func (a *App) stopServices() error {
 		}(srv)
 	}
 
+	// 标识服务完全停止
 	done := make(chan struct{})
 	go func() {
 		wg.Wait()
