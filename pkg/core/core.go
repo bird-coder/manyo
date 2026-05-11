@@ -47,12 +47,8 @@ type Container struct {
 }
 
 func NewKernal() *Container {
-	sysConfig := &SysConfig{
-		Environment: constant.Dev.String(),
-		Timezone:    defaultTimeZone,
-	}
 	return &Container{
-		sys:       sysConfig,
+		sys:       &SysConfig{},
 		dbs:       make(map[string]*gorm.DB),
 		configs:   make(map[string]any),
 		logs:      make(map[string]logger.Logger),

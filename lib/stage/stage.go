@@ -175,6 +175,10 @@ func (a *App) Stop(ctx context.Context) error {
 		return a.Err()
 	}
 
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	a.cancel()
 
 	select {

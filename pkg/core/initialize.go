@@ -1,8 +1,8 @@
 /*
  * @Author: yujiajie
  * @Date: 2024-12-25 20:13:05
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-09-03 18:12:49
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-11 18:40:47
  * @FilePath: /manyo/pkg/core/initialize.go
  * @Description:
  */
@@ -28,8 +28,24 @@ func loadConfig(configFile string) error {
 	return nil
 }
 
+func getConfig[T any](key string) (T, error) {
+	var cfg T
+	v := Kernal.GetConfig(key)
+	if v == nil {
+		return cfg, fmt.Errorf("config %s is nil", key)
+	}
+	res, ok := v.(T)
+	if !ok {
+		return cfg, fmt.Errorf("config %s has wrong type", key)
+	}
+	return res, nil
+}
+
 func setupRedis() error {
-	rdsConfigs := Kernal.GetConfig(CONFIG_KEY_REDIS).(map[string]*config.RedisDailConfig)
+	rdsConfigs, err := getConfig[map[string]*config.RedisDailConfig](CONFIG_KEY_REDIS)
+	if err != nil {
+		return fmt.Errorf("cache setup error, %v", err)
+	}
 	for k, cfg := range rdsConfigs {
 		rds, err := cache.NewRedis(nil, cfg)
 		if err != nil {
@@ -37,7 +53,10 @@ func setupRedis() error {
 		}
 		Kernal.SetCacheAdapter(k, rds)
 	}
-	lockConfig := Kernal.GetConfig(CONFIG_KEY_LOCKER).(*config.RedisDailConfig)
+	lockConfig, err := getConfig[*config.RedisDailConfig](CONFIG_KEY_LOCKER)
+	if err != nil {
+		return fmt.Errorf("locker setup error, %v", err)
+	}
 	if lockConfig != nil {
 		r, err := locker.NewRedis(nil, lockConfig)
 		if err != nil {
@@ -49,7 +68,10 @@ func setupRedis() error {
 }
 
 func setupDB() error {
-	dbConfigs := Kernal.GetConfig(CONFIG_KEY_DATABASE).(map[string]*config.MysqlConfig)
+	dbConfigs, err := getConfig[map[string]*config.MysqlConfig](CONFIG_KEY_DATABASE)
+	if err != nil {
+		return fmt.Errorf("db setup error, %v", err)
+	}
 	for k, cfg := range dbConfigs {
 		db, err := database.NewMysql(k, cfg)
 		if err != nil {
@@ -61,7 +83,10 @@ func setupDB() error {
 }
 
 func setupLog() error {
-	logConfigs := Kernal.GetConfig(CONFIG_KEY_LOGGER).(map[string]*config.LoggerConfig)
+	logConfigs, err := getConfig[map[string]*config.LoggerConfig](CONFIG_KEY_LOGGER)
+	if err != nil {
+		return fmt.Errorf("log setup error, %v", err)
+	}
 	for k, cfg := range logConfigs {
 		log := logger.NewLogger(cfg, Kernal.GetSysInfo().Environment)
 		Kernal.SetLogger(k, log)
