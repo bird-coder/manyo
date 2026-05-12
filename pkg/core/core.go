@@ -4,7 +4,6 @@ import (
 	"maps"
 	"sync"
 
-	"github.com/bird-coder/manyo/constant"
 	"github.com/bird-coder/manyo/lib/rocketmq"
 	"github.com/bird-coder/manyo/pkg/logger"
 	"github.com/bird-coder/manyo/pkg/storage/cache"
@@ -32,94 +31,106 @@ var (
 	defaultTimeZone = "Asia/Shanghai"
 )
 
-var Kernal Core = NewKernal()
+var defaultCore Core = NewContainer()
+
+func Default() Core {
+	return defaultCore
+}
+
+func SetDefault(c Core) {
+	if c == nil {
+		return
+	}
+	defaultCore = c
+}
+
+func Build(configFile string) (*Container, error) {
+	container := NewContainer()
+	if err := container.Init(configFile); err != nil {
+		return nil, err
+	}
+	return container, nil
+}
+
+func BuildDefault(configFile string) (*Container, error) {
+	container := NewContainer()
+	if err := container.Init(configFile); err != nil {
+		return nil, err
+	}
+	SetDefault(container)
+	return container, nil
+}
 
 type Container struct {
-	sys       *SysConfig
-	dbs       map[string]*gorm.DB
-	configs   map[string]any
-	logs      map[string]logger.Logger
-	rds       map[string]cache.AdapterCache
-	consumers map[string][]rocketmq.Consumer
-	locker    locker.AdapterLocker
+	appConfig *BaseAppConfig
+	resources Resources
+
+	customConfigs map[string]any
 
 	mux sync.RWMutex
 }
 
-func NewKernal() *Container {
+func NewContainer() *Container {
 	return &Container{
-		sys:       &SysConfig{},
-		dbs:       make(map[string]*gorm.DB),
-		configs:   make(map[string]any),
-		logs:      make(map[string]logger.Logger),
-		rds:       make(map[string]cache.AdapterCache),
-		consumers: make(map[string][]rocketmq.Consumer),
+		appConfig: &BaseAppConfig{
+			System: &SysConfig{},
+		},
+		resources: Resources{
+			loggers:   make(map[string]logger.Logger),
+			databases: make(map[string]*gorm.DB),
+			caches:    make(map[string]cache.AdapterCache),
+			consumers: make(map[string][]rocketmq.Consumer),
+		},
+		customConfigs: make(map[string]any),
 	}
 }
 
-func (e *Container) SetSysInfo(cfg *SysConfig) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-
-	if cfg == nil {
-		return
-	}
-
-	if len(cfg.Environment) == 0 {
-		cfg.Environment = constant.Dev.String()
-	}
-	if len(cfg.Timezone) == 0 {
-		cfg.Timezone = defaultTimeZone
-	}
-	e.sys = cfg
-}
-
-func (e *Container) GetSysInfo() *SysConfig {
+func (e *Container) GetSystem() SysConfig {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.sys
+	return *e.appConfig.System
 }
 
 func (e *Container) SetServerId(serverId uint8) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.sys.ServerId = serverId
+	e.appConfig.System.ServerId = serverId
 }
 
 func (e *Container) GetServerId() uint8 {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.sys.ServerId
+	return e.appConfig.System.ServerId
 }
 
-func (e *Container) SetDb(key string, db *gorm.DB) {
+func (e *Container) SetDatabase(key string, db *gorm.DB) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.dbs[key] = db
+	e.resources.setDatabase(key, db)
 }
 
-func (e *Container) GetDb(key string) *gorm.DB {
+func (e *Container) GetDatabase(key string) *gorm.DB {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.dbs[key]
+	return e.resources.getDatabase(key)
 }
 
-func (e *Container) GetAllDb() map[string]*gorm.DB {
+func (e *Container) GetAllDatabases() map[string]*gorm.DB {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return maps.Clone(e.dbs)
+	return maps.Clone(e.resources.databases)
 }
 
-func (e *Container) SetConfig(key string, config any) {
+func (e *Container) SetCustomConfig(key string, config any) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.configs[key] = config
+	e.customConfigs[key] = config
 }
 
-func (e *Container) GetConfig(key string) any {
+func (e *Container) GetCustomConfig(key string) any {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.configs[key]
+	return e.customConfigs[key]
 }
 
 func (e *Container) SetLogger(key string, log logger.Logger) {
@@ -128,79 +139,127 @@ func (e *Container) SetLogger(key string, log logger.Logger) {
 	if key == DEFAULT_KEY {
 		logger.SetLogger(log)
 	}
-	e.logs[key] = log
+	e.resources.setLogger(key, log)
 }
 
 func (e *Container) GetLogger(key string) logger.Logger {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.logs[key]
+	return e.resources.getLogger(key)
 }
 
 func (e *Container) SyncLogger() {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	for _, log := range e.logs {
+	for _, log := range e.resources.loggers {
 		log.Sync()
 	}
 }
 
-// SetCacheAdapter 设置缓存
-func (e *Container) SetCacheAdapter(key string, c cache.AdapterCache) {
+// SetCache 设置缓存
+func (e *Container) SetCache(key string, c cache.AdapterCache) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.rds[key] = c
+	e.resources.setCache(key, c)
 }
 
-// GetCacheAdapter 获取缓存
-func (e *Container) GetCacheAdapter(key string) cache.AdapterCache {
+// Cache 获取缓存
+func (e *Container) GetCache(key string) cache.AdapterCache {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.rds[key]
+	return e.resources.getCache(key)
 }
 
-// SetLockerAdapter 设置分布式锁
-func (e *Container) SetLockerAdapter(c locker.AdapterLocker) {
+// SetLocker 设置分布式锁
+func (e *Container) SetLocker(c locker.AdapterLocker) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.locker = c
+	e.resources.setLocker(c)
 }
 
-// GetLockerAdapter 获取分布式锁
-func (e *Container) GetLockerAdapter() locker.AdapterLocker {
+// Locker 获取分布式锁
+func (e *Container) GetLocker() locker.AdapterLocker {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.locker
+	return e.resources.getLocker()
 }
 
 func (e *Container) AddConsumer(key string, consumer rocketmq.Consumer) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.consumers[key] = append(e.consumers[key], consumer)
+	e.resources.addConsumer(key, consumer)
 }
 
-func (e *Container) GetConsumer(key string) []rocketmq.Consumer {
+func (e *Container) GetConsumers(key string) []rocketmq.Consumer {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
-	return e.consumers[key]
+	return e.resources.getConsumer(key)
 }
 
 func (e *Container) Init(configFile string) error {
 	var err error
-	if err = loadConfig(configFile); err != nil {
+	if err = e.loadConfig(configFile); err != nil {
 		return err
 	}
-	if err = setupLog(); err != nil {
+	if err = e.setupLog(); err != nil {
 		return err
 	}
-	if err = setupRedis(); err != nil {
+	if err = e.setupRedis(); err != nil {
 		return err
 	}
-	if err = setupDB(); err != nil {
+	if err = e.setupDB(); err != nil {
 		return err
 	}
-	if err = setServerId(); err != nil {
+	if err = e.setServerId(); err != nil {
 		return err
 	}
 	return nil
+}
+
+type Resources struct {
+	loggers   map[string]logger.Logger
+	databases map[string]*gorm.DB
+	caches    map[string]cache.AdapterCache
+	consumers map[string][]rocketmq.Consumer
+	locker    locker.AdapterLocker
+}
+
+func (r *Resources) setLogger(key string, log logger.Logger) {
+	r.loggers[key] = log
+}
+
+func (r *Resources) getLogger(key string) logger.Logger {
+	return r.loggers[key]
+}
+
+func (r *Resources) setDatabase(key string, db *gorm.DB) {
+	r.databases[key] = db
+}
+
+func (r *Resources) getDatabase(key string) *gorm.DB {
+	return r.databases[key]
+}
+
+func (r *Resources) setCache(key string, cache cache.AdapterCache) {
+	r.caches[key] = cache
+}
+
+func (r *Resources) getCache(key string) cache.AdapterCache {
+	return r.caches[key]
+}
+
+func (r *Resources) addConsumer(key string, consumer rocketmq.Consumer) {
+	r.consumers[key] = append(r.consumers[key], consumer)
+}
+
+func (r *Resources) getConsumer(key string) []rocketmq.Consumer {
+	return append([]rocketmq.Consumer{}, r.consumers[key]...)
+}
+
+func (r *Resources) setLocker(locker locker.AdapterLocker) {
+	r.locker = locker
+}
+
+func (r *Resources) getLocker() locker.AdapterLocker {
+	return r.locker
 }

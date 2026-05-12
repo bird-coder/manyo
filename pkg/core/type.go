@@ -1,8 +1,8 @@
 /*
  * @Author: yujiajie
  * @Date: 2024-12-25 19:42:41
- * @LastEditors: yujiajie
- * @LastEditTime: 2025-09-03 18:13:25
+ * @LastEditors: yujiajie 1037297660@qq.com
+ * @LastEditTime: 2026-05-12 11:45:38
  * @FilePath: /manyo/pkg/core/type.go
  * @Description:
  */
@@ -18,31 +18,22 @@ import (
 )
 
 type Core interface {
-	SetSysInfo(cfg *SysConfig)
-	GetSysInfo() *SysConfig
+	GetSystem() SysConfig
 
-	SetServerId(serverId uint8)
 	GetServerId() uint8
 
-	SetDb(key string, db *gorm.DB)
-	GetDb(key string) *gorm.DB
-	GetAllDb() map[string]*gorm.DB
+	GetDatabase(key string) *gorm.DB
+	GetAllDatabases() map[string]*gorm.DB
 
-	SetLogger(key string, log logger.Logger)
 	GetLogger(key string) logger.Logger
 	SyncLogger()
 
-	SetConfig(key string, config any)
-	GetConfig(key string) any
+	SetCustomConfig(key string, config any)
+	GetCustomConfig(key string) any
 
-	SetCacheAdapter(key string, c cache.AdapterCache)
-	GetCacheAdapter(key string) cache.AdapterCache
+	GetCache(key string) cache.AdapterCache
 
-	SetLockerAdapter(locker.AdapterLocker)
-	GetLockerAdapter() locker.AdapterLocker
+	GetLocker() locker.AdapterLocker
 
-	AddConsumer(key string, consumer rocketmq.Consumer)
-	GetConsumer(key string) []rocketmq.Consumer
-
-	Init(string) error
+	GetConsumers(key string) []rocketmq.Consumer
 }

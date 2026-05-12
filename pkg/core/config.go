@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 19:43:53
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-11 18:49:36
+ * @LastEditTime: 2026-05-12 11:00:08
  * @FilePath: /manyo/pkg/core/config.go
  * @Description:
  */
@@ -40,10 +40,13 @@ type SysConfig struct {
 // 这里仅处理“结构完整性”相关的默认值，不处理依赖外部资源的校验逻辑。
 func (app *BaseAppConfig) Normalize() {
 	if app.System == nil {
-		app.System = &SysConfig{
-			Environment: constant.Dev.String(),
-			Timezone:    defaultTimeZone,
-		}
+		app.System = &SysConfig{}
+	}
+	if len(app.System.Environment) == 0 {
+		app.System.Environment = constant.Dev.String()
+	}
+	if len(app.System.Timezone) == 0 {
+		app.System.Timezone = defaultTimeZone
 	}
 
 	if app.Loggers == nil {
@@ -114,13 +117,5 @@ func (app *BaseAppConfig) LoadConfig(configFile string) (err error) {
 	if err = app.Validate(); err != nil {
 		return
 	}
-	Kernal.SetSysInfo(app.System)
-	Kernal.SetConfig(CONFIG_KEY_LOGGER, app.Loggers)
-	Kernal.SetConfig(CONFIG_KEY_DATABASE, app.Databases)
-	Kernal.SetConfig(CONFIG_KEY_REDIS, app.Redis)
-	Kernal.SetConfig(CONFIG_KEY_LOCKER, app.Locker)
-	Kernal.SetConfig(CONFIG_KEY_ROCKET, app.RocketMq)
-	Kernal.SetConfig(CONFIG_KEY_CONSUMER, app.Consumers)
-	Kernal.SetConfig(CONFIG_KEY_NACOS, app.Nacos)
 	return
 }

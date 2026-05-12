@@ -156,12 +156,8 @@ type ConsumerRegistry struct {
 }
 
 func NewConsumerRegistry(consumers map[string][]rocketmq.Consumer) *ConsumerRegistry {
-	clone := make(map[string][]rocketmq.Consumer, len(consumers))
-	for key, items := range consumers {
-		clone[key] = append([]rocketmq.Consumer(nil), items...)
-	}
 	return &ConsumerRegistry{
-		consumers: clone,
+		consumers: consumers,
 	}
 }
 
