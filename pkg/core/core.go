@@ -57,7 +57,16 @@ func BuildWithProvider(configFile string, provider ConfigProvider) (*Container, 
 	if err := provider.LoadConfig(configFile); err != nil {
 		return nil, fmt.Errorf("读取配置失败[%v]", err)
 	}
-	return BuildWithConfig(provider.GetBaseAppConfig())
+	container, err := BuildWithConfig(provider.GetBaseAppConfig())
+	if err != nil {
+		return nil, err
+	}
+	if exporter, ok := provider.(CustomConfigExporter); ok {
+		for key, cfg := range exporter.CustomConfigs() {
+			container.SetCustomConfig(key, cfg)
+		}
+	}
+	return container, nil
 }
 
 func BuildWithConfig(cfg *BaseAppConfig) (*Container, error) {

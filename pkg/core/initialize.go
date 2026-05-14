@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 20:13:05
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-14 09:59:11
+ * @LastEditTime: 2026-05-14 10:59:19
  * @FilePath: /manyo/pkg/core/initialize.go
  * @Description:
  */
@@ -21,6 +21,10 @@ import (
 
 type ConfigReader interface {
 	GetCustomConfig(key string) any
+}
+
+type CustomConfigExporter interface {
+	CustomConfigs() map[string]any
 }
 
 func GetCustomConfig[T any](r ConfigReader, key string) (T, error) {
