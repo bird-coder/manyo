@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-05-13 17:41:28
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-09 10:52:37
+ * @LastEditTime: 2026-05-14 11:16:43
  * @FilePath: /manyo/pkg/server/httpx/http.go
  * @Description:
  */
@@ -31,11 +31,10 @@ type HttpServer struct {
 	ctx context.Context
 }
 
-func NewHttpServer(ctx context.Context, cfg *config.HttpConfig) *HttpServer {
+func NewHttpServer(cfg *config.HttpConfig) *HttpServer {
 	srv := &HttpServer{
 		cfg:    cfg,
 		Engine: gin.New(),
-		ctx:    ctx,
 	}
 	srv.init()
 
