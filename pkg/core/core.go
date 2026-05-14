@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+	"fmt"
 	"maps"
 	"sync"
 
@@ -45,16 +47,22 @@ func SetDefault(c Core) {
 }
 
 func Build(configFile string) (*Container, error) {
-	container := NewContainer()
-	if err := container.Init(configFile); err != nil {
-		return nil, err
-	}
-	return container, nil
+	return BuildWithProvider(configFile, new(BaseAppConfig))
 }
 
-func BuildDefault(configFile string) (*Container, error) {
+func BuildWithProvider(configFile string, provider ConfigProvider) (*Container, error) {
+	if provider == nil {
+		provider = new(BaseAppConfig)
+	}
+	if err := provider.LoadConfig(configFile); err != nil {
+		return nil, fmt.Errorf("读取配置失败[%v]", err)
+	}
+	return BuildWithConfig(provider.GetBaseAppConfig())
+}
+
+func BuildWithConfig(cfg *BaseAppConfig) (*Container, error) {
 	container := NewContainer()
-	if err := container.Init(configFile); err != nil {
+	if err := container.InitWithConfig(cfg); err != nil {
 		return nil, err
 	}
 	SetDefault(container)
@@ -196,9 +204,12 @@ func (e *Container) GetConsumers(key string) []rocketmq.Consumer {
 	return e.resources.getConsumer(key)
 }
 
-func (e *Container) Init(configFile string) error {
+func (e *Container) InitWithConfig(cfg *BaseAppConfig) error {
+	if cfg == nil {
+		return errors.New("base app config is nil")
+	}
 	var err error
-	if err = e.loadConfig(configFile); err != nil {
+	if err = e.loadConfig(cfg); err != nil {
 		return err
 	}
 	if err = e.setupLog(); err != nil {

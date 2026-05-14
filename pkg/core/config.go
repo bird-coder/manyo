@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 19:43:53
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-12 11:00:08
+ * @LastEditTime: 2026-05-14 10:25:58
  * @FilePath: /manyo/pkg/core/config.go
  * @Description:
  */
@@ -17,6 +17,17 @@ import (
 
 	"github.com/spf13/viper"
 )
+
+// 上层Config示例
+// type AppConfig struct {
+// 	core.BaseAppConfig `mapstructure:",squash"` //这个tag必须加
+// 	Other field
+// }
+
+type ConfigProvider interface {
+	LoadConfig(configFile string) error
+	GetBaseAppConfig() *BaseAppConfig
+}
 
 type BaseAppConfig struct {
 	System    *SysConfig                      `mapstructure:"system"`
@@ -110,12 +121,12 @@ func (app *BaseAppConfig) LoadConfig(configFile string) (err error) {
 	if err = viper.ReadInConfig(); err != nil {
 		return
 	}
-	if err = viper.Unmarshal(&app); err != nil {
-		return
-	}
-	app.Normalize()
-	if err = app.Validate(); err != nil {
+	if err = viper.Unmarshal(app); err != nil {
 		return
 	}
 	return
+}
+
+func (app *BaseAppConfig) GetBaseAppConfig() *BaseAppConfig {
+	return app
 }

@@ -2,7 +2,7 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 20:13:05
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-12 11:50:13
+ * @LastEditTime: 2026-05-14 09:59:11
  * @FilePath: /manyo/pkg/core/initialize.go
  * @Description:
  */
@@ -36,10 +36,12 @@ func GetCustomConfig[T any](r ConfigReader, key string) (T, error) {
 	return res, nil
 }
 
-func (c *Container) loadConfig(configFile string) error {
-	if err := c.appConfig.LoadConfig(configFile); err != nil {
-		return fmt.Errorf("读取配置失败[%v]", err)
+func (c *Container) loadConfig(cfg *BaseAppConfig) error {
+	cfg.Normalize()
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("配置未通过校验[%v]", err)
 	}
+	c.appConfig = cfg
 	return nil
 }
 
