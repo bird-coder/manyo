@@ -46,15 +46,18 @@ func SetDefault(c Core) {
 	defaultCore = c
 }
 
-func Build(configFile string) (*Container, error) {
-	return BuildWithProvider(configFile, new(BaseAppConfig))
+func Build(configFiles ...string) (*Container, error) {
+	return BuildWithProvider(new(BaseAppConfig), configFiles...)
 }
 
-func BuildWithProvider(configFile string, provider ConfigProvider) (*Container, error) {
+func BuildWithProvider(provider ConfigProvider, configFiles ...string) (*Container, error) {
+	if len(configFiles) == 0 {
+		return nil, errors.New("缺少配置文件")
+	}
 	if provider == nil {
 		provider = new(BaseAppConfig)
 	}
-	if err := provider.LoadConfig(configFile); err != nil {
+	if err := provider.LoadConfig(configFiles...); err != nil {
 		return nil, fmt.Errorf("读取配置失败[%v]", err)
 	}
 	container, err := BuildWithConfig(provider.GetBaseAppConfig())

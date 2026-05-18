@@ -2,13 +2,14 @@
  * @Author: yujiajie
  * @Date: 2024-12-25 19:43:53
  * @LastEditors: yujiajie 1037297660@qq.com
- * @LastEditTime: 2026-05-14 10:25:58
+ * @LastEditTime: 2026-05-18 18:36:37
  * @FilePath: /manyo/pkg/core/config.go
  * @Description:
  */
 package core
 
 import (
+	"errors"
 	"fmt"
 
 	cfg "github.com/bird-coder/manyo/config"
@@ -25,7 +26,7 @@ import (
 // }
 
 type ConfigProvider interface {
-	LoadConfig(configFile string) error
+	LoadConfig(configFiles ...string) error
 	GetBaseAppConfig() *BaseAppConfig
 }
 
@@ -116,10 +117,22 @@ func (app *BaseAppConfig) Validate() error {
 	return nil
 }
 
-func (app *BaseAppConfig) LoadConfig(configFile string) (err error) {
-	viper.SetConfigFile(configFile)
+func (app *BaseAppConfig) LoadConfig(configFiles ...string) (err error) {
+	if len(configFiles) == 0 {
+		err = errors.New("缺少配置文件")
+		return
+	}
+	viper.SetConfigFile(configFiles[0])
 	if err = viper.ReadInConfig(); err != nil {
 		return
+	}
+	if len(configFiles) > 1 {
+		for _, configFile := range configFiles[1:] {
+			viper.SetConfigFile(configFile)
+			if err = viper.MergeInConfig(); err != nil {
+				return
+			}
+		}
 	}
 	if err = viper.Unmarshal(app); err != nil {
 		return
