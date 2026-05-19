@@ -2,7 +2,7 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-23 19:13:13
- * @LastEditTime: 2026-05-07 14:46:07
+ * @LastEditTime: 2026-05-19 11:14:36
  * @LastEditors: yujiajie 1037297660@qq.com
  */
 package util
@@ -53,6 +53,7 @@ type HTTPRequest struct {
 	Body           io.Reader
 	ExpectedStatus []int
 	rawBodyString  string
+	Timeout        time.Duration
 
 	err error
 }
@@ -168,6 +169,11 @@ func (req *HTTPRequest) WithFormBody(form url.Values) *HTTPRequest {
 	return req
 }
 
+func (req *HTTPRequest) WithTimeout(timeout time.Duration) *HTTPRequest {
+	req.Timeout = timeout
+	return req
+}
+
 func (req HTTPRequest) Do(ctx context.Context) (*HTTPResponse, error) {
 	if req.err != nil {
 		return nil, req.err
@@ -176,6 +182,15 @@ func (req HTTPRequest) Do(ctx context.Context) (*HTTPResponse, error) {
 	targetURL, err := req.buildURL()
 	if err != nil {
 		return nil, err
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if req.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, req.Timeout)
+		defer cancel()
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, req.Method, targetURL, req.Body)
