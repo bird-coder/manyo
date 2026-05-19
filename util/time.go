@@ -2,12 +2,15 @@
  * @Description:
  * @Author: yuanshisan
  * @Date: 2023-09-22 23:35:30
- * @LastEditTime: 2024-03-11 21:34:12
- * @LastEditors: yujiajie
+ * @LastEditTime: 2026-05-19 17:29:12
+ * @LastEditors: yujiajie 1037297660@qq.com
  */
 package util
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // 获取某一周的周一时间
 func GetMonday(d time.Time) time.Time {
@@ -51,4 +54,9 @@ func DateToTime(date string) (int64, error) {
 func TimeToDate(timestamp int64) string {
 	d := time.Unix(timestamp, 0)
 	return FormatTime(d)
+}
+
+// 将时长转为毫秒
+func ReprOfDuration(duration time.Duration) string {
+	return fmt.Sprintf("%.1fms", float32(duration)/float32(time.Millisecond))
 }
